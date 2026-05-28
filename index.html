@@ -161,6 +161,23 @@
             return getZScore(gamma);
         }
 
+        // Standard normal CDF (Laplace function approximation)
+        function normalCDF(x) {
+            const t = 1 / (1 + 0.2316419 * Math.abs(x));
+            const d = 0.3989423 * Math.exp(-x * x / 2);
+            const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+            return x > 0 ? 1 - p : p;
+        }
+
+        // Chi-squared critical values for alpha = 0.05
+        function getChiSqCrit(df) {
+            const table = {
+                1: 3.841, 2: 5.991, 3: 7.815, 4: 9.488, 5: 11.070,
+                6: 12.592, 7: 14.067, 8: 15.507, 9: 16.919, 10: 18.307
+            };
+            return table[df] || (df > 10 ? df + 1.645 * Math.sqrt(2 * df) : 3.841);
+        }
+
         let histogramChart, edfChart, ciChart;
 
         function updateTask1() {
@@ -189,6 +206,7 @@
             const unbiasedVar = sumXiMinusXBarSqNi / (totalN - 1);
             const s = Math.sqrt(unbiasedVar);
 
+            // Mode, Median ...
             let maxNi = -1;
             let modalIdx = 0;
             intervals.forEach((int, i) => {
@@ -220,6 +238,26 @@
             const ciLow = xBar - delta;
             const ciHigh = xBar + delta;
 
+            // --- Pearson's Chi-Squared Test ---
+            let chiObs = 0;
+            const theoreticalNi = [];
+            intervals.forEach((int, i) => {
+                // Adjust boundaries for first and last interval to cover (-inf, inf)
+                const a = (i === 0) ? -Infinity : int.start;
+                const b = (i === intervals.length - 1) ? Infinity : int.end;
+                
+                const p = normalCDF((b - xBar) / s) - normalCDF((a - xBar) / s);
+                const nPrime = totalN * p;
+                theoreticalNi.push(nPrime);
+                if (nPrime > 0) {
+                    chiObs += Math.pow(int.ni - nPrime, 2) / nPrime;
+                }
+            });
+
+            const df = intervals.length - 2 - 1; // k - m - 1, where m=2 (mean and variance)
+            const chiCrit = getChiSqCrit(df);
+            const isHypothesisAccepted = chiObs < chiCrit;
+
             const resultsDiv = document.getElementById('task1-results');
             resultsDiv.innerHTML = `
                 <p><b>Объем выборки (n):</b> ${totalN}</p>
@@ -230,6 +268,14 @@
                 <p><b>Мода (Mo):</b> ${Mo.toFixed(4)}</p>
                 <p><b>Медиана (Me):</b> ${Me.toFixed(4)}</p>
                 <p><b>Доверительный интервал (γ=0.95):</b> (${ciLow.toFixed(4)}; ${ciHigh.toFixed(4)})</p>
+                <hr>
+                <h3>Критерий согласия Пирсона (α = 0.05):</h3>
+                <p><b>χ² наблюдаемое:</b> ${chiObs.toFixed(4)}</p>
+                <p><b>Степени свободы (df):</b> ${df}</p>
+                <p><b>χ² критическое:</b> ${chiCrit.toFixed(3)}</p>
+                <p><b>Вывод:</b> ${isHypothesisAccepted 
+                    ? '<span style="color: green;">Гипотеза о нормальном распределении ПРИНИМАЕТСЯ</span>' 
+                    : '<span style="color: red;">Гипотеза о нормальном распределении ОТКЛОНЯЕТСЯ</span>'}</p>
             `;
 
             const labels = intervals.map(int => `(${int.start}, ${int.end}]`);

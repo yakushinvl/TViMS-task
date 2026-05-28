@@ -82,11 +82,11 @@
                 </tr>
             </thead>
             <tbody id="freq-table-body">
-                <tr><td>[-4, 0)</td><td><input type="number" value="4" class="task1-ni" data-start="-4" data-end="0"></td></tr>
-                <tr><td>[0, 4)</td><td><input type="number" value="13" class="task1-ni" data-start="0" data-end="4"></td></tr>
-                <tr><td>[4, 8)</td><td><input type="number" value="25" class="task1-ni" data-start="4" data-end="8"></td></tr>
-                <tr><td>[8, 12)</td><td><input type="number" value="14" class="task1-ni" data-start="8" data-end="12"></td></tr>
-                <tr><td>[12, 16)</td><td><input type="number" value="4" class="task1-ni" data-start="12" data-end="16"></td></tr>
+                <tr><td>(-4, 0]</td><td><input type="number" value="4" class="task1-ni" data-start="-4" data-end="0"></td></tr>
+                <tr><td>(0, 4]</td><td><input type="number" value="13" class="task1-ni" data-start="0" data-end="4"></td></tr>
+                <tr><td>(4, 8]</td><td><input type="number" value="25" class="task1-ni" data-start="4" data-end="8"></td></tr>
+                <tr><td>(8, 12]</td><td><input type="number" value="14" class="task1-ni" data-start="8" data-end="12"></td></tr>
+                <tr><td>(12, 16]</td><td><input type="number" value="4" class="task1-ni" data-start="12" data-end="16"></td></tr>
             </tbody>
         </table>
 
@@ -232,7 +232,7 @@
                 <p><b>Доверительный интервал (γ=0.95):</b> (${ciLow.toFixed(4)}; ${ciHigh.toFixed(4)})</p>
             `;
 
-            const labels = intervals.map(int => `[${int.start}, ${int.end})`);
+            const labels = intervals.map(int => `(${int.start}, ${int.end}]`);
             const relFreqs = intervals.map(int => int.ni / (totalN * h));
 
             if (histogramChart) histogramChart.destroy();
